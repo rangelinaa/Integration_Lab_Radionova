@@ -1,4 +1,4 @@
-#Синхронизация CMS с PostgreSQL в n8n
+## Синхронизация CMS с PostgreSQL в n8n
 
 Workflow забирает детали из CMS API (с учётом пагинации), сохраняет и обновляет их в PostgreSQL, собирает CSV и отправляет его в Report API.
 
