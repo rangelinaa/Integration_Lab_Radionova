@@ -1,0 +1,404 @@
+{
+  "name": "Синхронизация CMS Радионова",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://77.67.89.207:8080/report/csv",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1632,
+        -128
+      ],
+      "id": "e96161ed-80bd-4394-b29d-ec3b301dc02c",
+      "name": "Отправить CSV в Report API"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7703751f-9694-4588-8bc9-ae035925e8c8",
+      "name": "Запуск"
+    },
+    {
+      "parameters": {
+        "url": "http://77.67.89.207:8080/cms/spares",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "size",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "parameters": {
+                "parameters": [
+                  {
+                    "name": "page",
+                    "value": "={{ $pageCount }}"
+                  }
+                ]
+              },
+              "limitPagesFetched": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "1802fbd2-383f-4d60-a487-79d38474fd09",
+      "name": "HTTP Request Получить детали из CMS",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Rtc5F8z6kFjbIUIK",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "spares",
+          "mode": "list",
+          "cachedResultName": "spares"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "quantity": "={{ $json.quantity }}",
+            "spare_code": "={{ $json.spareCode }}",
+            "spare_name": "={{ $json.spareName }}",
+            "spare_description": "={{ $json.spareDescription }}",
+            "spare_type": "={{ $json.spareType }}",
+            "spare_status": "={{ $json.spareStatus }}",
+            "price": "={{ $json.price }}",
+            "updated_at": "={{ $json.updatedAt }}"
+          },
+          "matchingColumns": [
+            "spare_code"
+          ],
+          "schema": [
+            {
+              "id": "spare_code",
+              "displayName": "spare_code",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "spare_name",
+              "displayName": "spare_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "spare_description",
+              "displayName": "spare_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "spare_type",
+              "displayName": "spare_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "spare_status",
+              "displayName": "spare_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "quantity",
+              "displayName": "quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        416,
+        0
+      ],
+      "id": "8ff9f042-7bd4-43d6-9ec9-ca115318b4db",
+      "name": "Записать детали в БД",
+      "credentials": {
+        "postgres": {
+          "id": "uyp2LyXRLglkVlKs",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT spare_code, spare_name, spare_description, spare_type, spare_status, price, quantity, updated_at FROM spares ORDER BY spare_code;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        624,
+        0
+      ],
+      "id": "95df47f2-9fa4-42c7-bbc2-ba3ac15f28d5",
+      "name": "Выбрать все детали из БД",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "uyp2LyXRLglkVlKs",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "delimiter": ";",
+          "headerRow": false
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        832,
+        0
+      ],
+      "id": "96bc61ea-21fe-48a5-b375-419287798648",
+      "name": "Собрать CSV"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://77.67.89.207:8080/auth/token",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"username\": \"student34\", \"password\": \"ПАРОЛЬ\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "a2634dc1-92e6-4e0d-8194-f6787a2942aa",
+      "name": "Получить токен"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1200,
+        -128
+      ],
+      "id": "37f8c4b8-ccb9-444c-a187-10a7f522373a",
+      "name": "Объединить токен и CSV"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst text = buf.toString('utf8').replace(/^\\uFEFF/, '');\nconst bin = await this.helpers.prepareBinaryData(Buffer.from(text, 'utf8'), 'File.csv', 'text/csv');\nreturn [{ json: item.json, binary: { data: bin } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        -128
+      ],
+      "id": "a6b21f6e-bb72-47a6-8160-3272f6ed3ce7",
+      "name": "Убрать BOM из CSV"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Запуск": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Получить детали из CMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Получить детали из CMS": {
+      "main": [
+        [
+          {
+            "node": "Записать детали в БД",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Записать детали в БД": {
+      "main": [
+        [
+          {
+            "node": "Выбрать все детали из БД",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Выбрать все детали из БД": {
+      "main": [
+        [
+          {
+            "node": "Собрать CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Собрать CSV": {
+      "main": [
+        [
+          {
+            "node": "Получить токен",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Объединить токен и CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Получить токен": {
+      "main": [
+        [
+          {
+            "node": "Объединить токен и CSV",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Объединить токен и CSV": {
+      "main": [
+        [
+          {
+            "node": "Убрать BOM из CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Убрать BOM из CSV": {
+      "main": [
+        [
+          {
+            "node": "Отправить CSV в Report API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "666f770e-383f-4aea-91d6-fb0d55a83585",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2d3a6931bca989b4ff1e458fd9e989fa8a8ae1f170c84588d5aeb186cbe8906b"
+  },
+  "id": "TOVvvdfkwGtGvJmp",
+  "tags": []
+}
